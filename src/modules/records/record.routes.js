@@ -7,8 +7,6 @@ const router = express.Router();
 
 // 1. ALL routes in this file require the user to be logged in
 router.use(protect);
-
-// 2. Define routes and attach specific Role-Based Access Control (RBAC)
 router
   .route("/")
   .get(

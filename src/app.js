@@ -7,10 +7,8 @@ const { errorHandler } = require("./middlewares/errorHandler");
 
 const app = express();
 
-// 1. Security HTTP headers
 app.use(helmet());
 
-// 2. CORS setup (Allow frontend to connect)
 app.use(
   cors({
     origin: process.env.FRONTEND_URL || "http://localhost:3000",
@@ -29,7 +27,7 @@ if (process.env.NODE_ENV === "development") {
 // 5. Rate Limiting (Prevent Brute Force / Scraping)
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
+  max: 100,
   message: { error: "Too many requests from this IP, please try again later." },
 });
 app.use("/api", limiter);

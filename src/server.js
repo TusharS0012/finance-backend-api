@@ -42,7 +42,7 @@ async function startServer() {
     logger.error(`
       --------------------------
       Failed to start server: ${error.message}
-      ---------------------------
+      --------------------------
     `);
     process.exit(1);
   }
