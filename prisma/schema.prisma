@@ -1,0 +1,97 @@
+// cSpell:disable
+// spell-checker:disable
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==========================================
+// ENUMS
+// ==========================================
+
+enum Role {
+  VIEWER
+  ANALYST
+  ADMIN
+}
+
+enum Status {
+  ACTIVE
+  INACTIVE
+}
+
+enum EntryType {
+  INCOME
+  EXPENSE
+}
+
+// ==========================================
+// MODELS
+// ==========================================
+
+model User {
+  id           String @id @default(uuid()) @db.Uuid
+  email        String @unique
+  passwordHash String
+  role         Role   @default(VIEWER)
+  status       Status @default(ACTIVE)
+
+  // Relations
+  records   Record[]
+  auditLogs AuditLog[]
+
+  // Timestamps & Soft Delete
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+}
+
+model Record {
+  id     String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid
+
+  // Exact precision for financial data: 19 total digits, 4 decimal places
+  amount      Decimal   @db.Decimal(19, 4)
+  type        EntryType
+  category    String
+  description String?
+
+  // The actual transaction date (can be different from when it was created in the DB)
+  date DateTime @default(now())
+
+  // Timestamps & Soft Delete
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // Relation mapping
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  // Indexes to drastically speed up dashboard aggregations
+  @@index([userId, date])
+  @@index([userId, type])
+  @@index([category])
+}
+
+model AuditLog {
+  id     String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid
+
+  action   String // e.g., "CREATE_RECORD", "DELETE_RECORD", "LOGIN"
+  entityId String // The ID of the affected record/user
+
+  createdAt DateTime @default(now())
+
+  // Relation mapping
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([action])
+}
